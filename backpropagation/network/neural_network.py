@@ -20,10 +20,7 @@ class NeuralNetwork():
                 Function used for calculating the cost of the neural network.
 
             weights (np.array):
-                Neural network weight values.
-
-            biases (np.array):
-                Neural network biases values.
+                Neural network weight and biases values.
     """
     def __init__(
             self,
@@ -38,18 +35,13 @@ class NeuralNetwork():
 
         self.layers_count = len(neurons_count_per_layer)
 
-        self.weights = np.array([
-            np.random.normal((
-                neurons_count_per_layer[layer],
-                neurons_count_per_layer[layer + 1]
+        self.weights = [
+            np.random.normal(size=(
+                neurons_count_per_layer[layer + 1],
+                neurons_count_per_layer[layer] + 1
             ))
             for layer in range(self.layers_count - 1)
-        ])
-
-        self.biases = np.array([
-            np.random.normal((neurons_count_per_layer[layer], 1))
-            for layer in range(self.layers_count - 1)
-        ])
+        ]
 
         self.activation_function = activation_function
         self.cost_function = cost_function
@@ -64,9 +56,10 @@ class NeuralNetwork():
                 The output values of the neural network for the given input.
 
         """
-        for weight, bias in zip(self.weights, self.biases):
+        for weight in self.weights:
             x = self.activation_function.calculate_value(
-                np.dot(weight, x) + bias)
+                np.dot(weight, np.insert(x, 0, 1))
+            )
 
         return x
 
@@ -80,15 +73,15 @@ class NeuralNetwork():
             Returns (int):
                 The cost value of the neural network for the given inputs.
         """
-        activation_values = np.concatenate([
+        activation_values = [
             self._feedforward(observation) for observation in X
-        ])
+        ]
         return self.cost_function.calculate_value(y, activation_values)
 
     def _collect_activation_function_arguments_and_values(
             self,
             x: np.array
-    ) -> Tuple[np.array, np.array]:
+    ) -> Tuple[List[np.array], List[np.array]]:
         """Collects the activation function arguments and values for each layer.
 
             Args:
@@ -102,16 +95,14 @@ class NeuralNetwork():
         activation_arguments = list()
         activation_values = [x]
 
-        current_activation_value = x
-        for weight, bias in zip(self.weights, self.biases):
-            current_activation_argument = np.dot(
-                weight, current_activation_value) + bias
-            current_activation_value = self.activation_function.calculate_value(
-                current_activation_argument)
-            activation_arguments.append(current_activation_argument)
-            activation_values.append(current_activation_value)
+        value = x
+        for weight in self.weights:
+            argument = np.dot(weight, np.insert(value, 0, 1))
+            value = self.activation_function.calculate_value(argument)
+            activation_arguments.append(argument)
+            activation_values.append(value)
 
-        return np.array(activation_arguments), np.array(activation_values)
+        return activation_arguments, activation_values
 
     def _backpropagation(
             self,
@@ -138,29 +129,29 @@ class NeuralNetwork():
                 activation_function_arguments[-1]),
         )
 
-        errors = np.zeros(self.biases.shape)
-        errors[-1] = output_error
+        gradient = list()
+        error = output_error
+        weight_gradient = np.dot(
+            np.atleast_2d(activation_function_values[-2]).transpose(),
+            np.atleast_2d(error)
+        )
+
+        gradient.append(np.insert(weight_gradient, 0, error, axis=1))
         for layer in range(2, self.layers_count):
-            errors[-layer] = np.multiply(
-                np.dot(
-                    np.transpose(self.weights[-layer + 1]),
-                    errors[-layer + 1]
-                ),
-                self.activation_function.calculate_derivative_value(
-                    activation_function_arguments[-layer]
-                )
+            activation_derivative = self.activation_function.calculate_derivative_value(
+                activation_function_arguments[-layer]
             )
 
-        biases_gradient = np.zeros(self.biases.shape)
-        weights_gradient = np.zeros(self.weights.shape)
-        for layer in range(1, self.layers_count):
-            weights_gradient[-layer] = np.dot(
+            weight = self.weights[-layer + 1][:, 1:]
+            error = np.dot(weight.transpose(), error) * activation_derivative
+
+            weight_gradient = np.dot(
                 np.atleast_2d(activation_function_values[-layer - 1]).transpose(),
-                np.atleast_2d(errors[-layer])
+                np.atleast_2d(error)
             )
-            biases_gradient[-layer] = errors[-layer]
+            gradient.insert(0, np.insert(weight_gradient, 0, error, axis=1))
 
-        return weights_gradient, biases_gradient
+        return gradient
 
     def _gradient_descent(
             self,
@@ -180,18 +171,12 @@ class NeuralNetwork():
                 List of expected outputs used for minimizing the cost function.
         """
 
-        weight_gradient = [np.zeros(weight.shape) for weight in self.weights]
-        biases_gradient = [np.zeros(bias.shape) for bias in self.biases]
+        gradient = [np.zeros(weight.shape) for weight in self.weights]
         for sample, label in zip(samples, labels):
-            sample_weights_gradient, sample_biases_gradient = self._backpropagation(
-                sample, label)
-            weight_gradient = np.add(weight_gradient, sample_weights_gradient)
-            biases_gradient = np.add(biases_gradient, sample_biases_gradient)
+            gradient = np.add(gradient, self._backpropagation(sample, label))
 
         self.weights = np.subtract(
-            self.weights, (learning_rate / len(samples)) * weight_gradient)
-        self.biases = np.subtract(
-            self.biases, (learning_rate / len(samples)) * biases_gradient)
+            self.weights, (learning_rate / len(samples)) * gradient)
 
     def _stochastic_gradient_descent(
             self,
@@ -221,7 +206,9 @@ class NeuralNetwork():
         """
         training_data = list(zip(samples, labels))
         mini_batch_count = len(training_data)//mini_batch_size
+        cost = list()
         for epoc in range(epocs_count):
+            cost.append(self.get_cost_function_value(samples, labels))
             np.random.shuffle(training_data)
             for mini_batch in range(mini_batch_count):
                 start_index = mini_batch*mini_batch_size
@@ -229,3 +216,5 @@ class NeuralNetwork():
                     start_index:start_index + mini_batch_size]
                 samples, labels = map(list, zip(*training_batch))
                 self._gradient_descent(samples, labels, learning_rate)
+
+        return cost
