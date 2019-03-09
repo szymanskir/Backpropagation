@@ -21,6 +21,7 @@ class NeuralNetwork():
             weights (np.array):
                 Neural network weight and biases values.
     """
+
     def __init__(
             self,
             neurons_count_per_layer: List[int],
@@ -135,7 +136,8 @@ class NeuralNetwork():
             np.atleast_2d(error)
         )
 
-        gradient.append(np.insert(weight_gradient.transpose(), 0, error, axis=1))
+        gradient.append(
+            np.insert(weight_gradient.transpose(), 0, error, axis=1))
         for layer in range(2, self.layers_count):
             activation_derivative = self.activation_function.calculate_derivative_value(
                 activation_function_arguments[-layer]
@@ -148,7 +150,8 @@ class NeuralNetwork():
                 np.atleast_2d(activation_function_values[-layer - 1]).transpose() @
                 np.atleast_2d(error)
             )
-            gradient.insert(0, np.insert(weight_gradient.transpose(), 0, error, axis=1))
+            gradient.insert(0, np.insert(
+                weight_gradient.transpose(), 0, error, axis=1))
 
         return gradient
 
@@ -185,7 +188,7 @@ class NeuralNetwork():
             labels: np.array,
             learning_rate: float = 0.5,
             mini_batch_size: int = 10,
-            epocs_count: int = 10
+            epochs_count: int = 10
     ):
         """Optimizes the neural network weights and biases using SGD.
 
@@ -202,7 +205,7 @@ class NeuralNetwork():
                 mini_batch_size (int):
                     Size of mini batches used during gradient descent.
 
-                epocs_count (int):
+                epochs_count (int):
                     Number of epocs used during training.
         """
         training_data = list(zip(samples, labels))
