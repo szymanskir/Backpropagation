@@ -15,8 +15,8 @@ VENV_NAME = backpropagation-env
 
 ## Install Python Dependencies
 requirements: 
-	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
 	$(PYTHON_INTERPRETER) setup.py install
+	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
 
 
 ## Delete all compiled Python files

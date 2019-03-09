@@ -3,7 +3,7 @@ astroid==2.2.2
 atomicwrites==1.3.0
 attrs==19.1.0
 Babel==2.6.0
--e git+https://github.com/szymanskir/Backpropagation.git@4007e9743707c8b8e4251ae2186370305b810f08#egg=backpropagation
+backpropagation==0.1.0
 certifi==2018.11.29
 chardet==3.0.4
 Click==7.0
