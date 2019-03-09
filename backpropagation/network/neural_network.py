@@ -113,7 +113,7 @@ class NeuralNetwork():
 
             Args:
                 x (np.array): Neural network input.
-                y (np. array): Expected neural network output.
+                y (np.array): Expected neural network output.
 
             Returns (Tuple[np.array, np.array]):
                 Tuple compoes of the gradient for weights and gradient
@@ -206,15 +206,15 @@ class NeuralNetwork():
                     Size of mini batches used during gradient descent.
 
                 epochs_count (int):
-                    Number of epocs used during training.
+                    Number of epochs used during training.
         """
         training_data = list(zip(samples, labels))
         mini_batch_count = len(training_data)//mini_batch_size
         cost = list()
-        for epoc in range(epocs_count):
+        for epoch in range(epocs_count):
             cost.append(self.get_cost_function_value(samples, labels))
             np.random.shuffle(training_data)
-            print(f'{epoc} epoc...')
+            print(f'{epoch} epoch...')
             for mini_batch in range(mini_batch_count):
                 start_index = mini_batch*mini_batch_size
                 training_batch = training_data[
