@@ -211,7 +211,7 @@ class NeuralNetwork():
         training_data = list(zip(samples, labels))
         mini_batch_count = len(training_data)//mini_batch_size
         cost = list()
-        for epoch in range(epocs_count):
+        for epoch in range(epochs_count):
             cost.append(self.get_cost_function_value(samples, labels))
             np.random.shuffle(training_data)
             print(f'{epoch} epoch...')
