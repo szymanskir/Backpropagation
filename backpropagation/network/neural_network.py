@@ -186,9 +186,11 @@ class NeuralNetwork():
             self,
             samples: np.array,
             labels: np.array,
-            learning_rate: float = 0.5,
+            learning_rate: float = 3.0,
             mini_batch_size: int = 10,
-            epochs_count: int = 10
+            epochs_count: int = 10,
+            test_samples: np.array = None,
+            test_labels: np.array = None,
     ):
         """Optimizes the neural network weights and biases using SGD.
 
@@ -207,19 +209,30 @@ class NeuralNetwork():
 
                 epochs_count (int):
                     Number of epochs used during training.
+
+                test_samples (List[np.array]):
+                    List of inputs used for neural network testing.
+
+                test_labels (List[np.array]):
+                    List of expected outputs used for neural network testing.       
         """
         training_data = list(zip(samples, labels))
         mini_batch_count = len(training_data)//mini_batch_size
-        cost = list()
+        train_cost = list()
+        test_cost = list()
         for epoch in range(epochs_count):
-            cost.append(self.get_cost_function_value(samples, labels))
+            train_cost.append(self.get_cost_function_value(samples, labels))
             np.random.shuffle(training_data)
             print(f'{epoch} epoch...')
             for mini_batch in range(mini_batch_count):
-                start_index = mini_batch*mini_batch_size
+                start_index = mini_batch * mini_batch_size
                 training_batch = training_data[
                     start_index:start_index + mini_batch_size]
                 samples, labels = map(list, zip(*training_batch))
                 self._gradient_descent(samples, labels, learning_rate)
 
-        return cost
+            if test_samples and test_labels:
+                test_cost.append(self.get_cost_function_value(
+                    test_samples, test_labels))
+
+        return train_cost, test_cost
