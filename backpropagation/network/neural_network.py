@@ -1,5 +1,3 @@
-import random
-import logging
 import numpy as np
 
 from typing import List, Tuple
@@ -59,7 +57,7 @@ class NeuralNetwork():
         """
         for weight in self.weights:
             x = self.activation_function.calculate_value(
-                np.dot(weight, np.insert(x, 0, 1))
+                weight @ np.insert(x, 0, 1)
             )
 
         return x
@@ -98,7 +96,7 @@ class NeuralNetwork():
 
         value = x
         for weight in self.weights:
-            argument = np.dot(weight, np.insert(value, 0, 1))
+            argument = weight @ np.insert(value, 0, 1)
             value = self.activation_function.calculate_value(argument)
             activation_arguments.append(argument)
             activation_values.append(value)
@@ -132,8 +130,8 @@ class NeuralNetwork():
 
         gradient = list()
         error = output_error
-        weight_gradient = np.dot(
-            np.atleast_2d(activation_function_values[-2]).transpose(),
+        weight_gradient = (
+            np.atleast_2d(activation_function_values[-2]).transpose() @
             np.atleast_2d(error)
         )
 
@@ -144,10 +142,10 @@ class NeuralNetwork():
             )
 
             weight = self.weights[-layer + 1][:, 1:]
-            error = np.dot(weight.transpose(), error) * activation_derivative
+            error = weight.transpose() @ error * activation_derivative
 
-            weight_gradient = np.dot(
-                np.atleast_2d(activation_function_values[-layer - 1]).transpose(),
+            weight_gradient = (
+                np.atleast_2d(activation_function_values[-layer - 1]).transpose() @
                 np.atleast_2d(error)
             )
             gradient.insert(0, np.insert(weight_gradient.transpose(), 0, error, axis=1))
@@ -174,10 +172,12 @@ class NeuralNetwork():
 
         gradient = [np.zeros(weight.shape) for weight in self.weights]
         for sample, label in zip(samples, labels):
-            gradient = np.add(gradient, self._backpropagation(sample, label))
+            gradient_sample = self._backpropagation(sample, label)
+            gradient = [np.add(x, y)
+                        for x, y in zip(gradient, gradient_sample)]
 
-        self.weights = np.subtract(
-            self.weights, (learning_rate / len(samples)) * gradient)
+        self.weights = [np.subtract(x, ((learning_rate)/len(samples)) * y)
+                        for x, y in zip(self.weights, gradient)]
 
     def _stochastic_gradient_descent(
             self,
@@ -209,7 +209,7 @@ class NeuralNetwork():
         mini_batch_count = len(training_data)//mini_batch_size
         cost = list()
         for epoc in range(epocs_count):
-#            cost.append(self.get_cost_function_value(samples, labels))
+            cost.append(self.get_cost_function_value(samples, labels))
             np.random.shuffle(training_data)
             print(f'{epoc} epoc...')
             for mini_batch in range(mini_batch_count):

@@ -8,27 +8,43 @@ from backpropagation.network.cost_function import (MSECostFunction,
                                                    SECostFunction)
 from numpy.testing import assert_array_equal, assert_allclose
 
+feedforward_layers = [[1, 1], [2, 2, 1], [2, 3, 1]]
+
+feedforward_weights = [
+    [np.array([-1, 1])],
+    [np.array([[-3, 1, 1], [0, 2, -1]]),
+     np.array([[0, 1, -1]])],
+    [np.array([[1, 1, 1], [0, 0, 1], [1, 1, 0]]),
+     np.array([[1, 0, 0, 1]])]
+]
+
+feedforward_activation = [
+    SigmoidActivationFunction(),
+    SigmoidActivationFunction(),
+    IdentityActivationFunction(),
+]
+
+feedforward_input = [np.array([1]), np.array([1, 2]), np.array([1, 1])]
+
+feedforward_expected = [
+    np.array([0.5]),
+    np.array([0.5]),
+    np.array([3]),
+]
+
+feedforward_test_cases = list(
+    zip(feedforward_layers, feedforward_weights, feedforward_activation,
+        feedforward_input, feedforward_expected))
+
 
 @pytest.mark.parametrize(
-    "neurons_count_per_layer, weights, test_input, expected",
-    [
-        (
-            # Test case 1
-            [1, 1],
-            [np.array([-1, 1])],
-            np.array([1]),
-            0.5),
-
-        # Test case 2
-        ([2, 2, 1],
-         [np.array([[-3, 1, 1], [0, 2, -1]]),
-          np.array([[0, 1, -1]])], np.array([1, 2]), 0.5)
-    ])
+    "neurons_count_per_layer, weights, activation, test_input, expected",
+    feedforward_test_cases)
 def test_neural_network_feedforward(neurons_count_per_layer, weights,
-                                    test_input, expected):
+                                    activation, test_input, expected):
     nn = NeuralNetwork(
         neurons_count_per_layer=neurons_count_per_layer,
-        activation_function=SigmoidActivationFunction(),
+        activation_function=activation,
         cost_function=MSECostFunction())
 
     nn.weights = weights
@@ -51,67 +67,79 @@ def test_neural_network_cost_value(neurons_count_per_layer, weights, X_input,
     assert_array_equal(result, expected)
 
 
-def test_neural_network_backpropagation():
+backpropagation_layers = [[2, 2, 2], [2, 3, 1]]
+
+backpropagation_weights = [[
+    np.array([[0, 1, 1], [1, 2, 2]]),
+    np.array([[1, 2, 2], [0, 1, 1]])
+], [np.array([[1, 1, 1], [0, 0, 1], [1, 1, 0]]),
+    np.array([[1, 0, 0, 1]])]]
+
+backpropagation_X = [np.array([2, 3]), np.array([1, 1])]
+
+backpropagation_y = [np.array([0, 1]), np.array([2])]
+
+backpropagation_expected = [[
+    np.array([[81, 162, 243], [81, 162, 243]]),
+    np.array([[33, 165, 363], [15, 75, 165]])
+], [np.array([[0, 0, 0], [0, 0, 0], [1, 1, 1]]),
+    np.array([[1, 3, 1, 2]])]]
+
+backpropagation_test_cases = list(
+    zip(backpropagation_layers, backpropagation_weights, backpropagation_X,
+        backpropagation_y, backpropagation_expected))
+
+
+@pytest.mark.parametrize("neurons_count_per_layer, weights, X, y, expected",
+                         backpropagation_test_cases)
+def test_neural_network_backpropagation(neurons_count_per_layer, weights, X, y,
+                                        expected):
     nn = NeuralNetwork(
-        neurons_count_per_layer=[2, 2, 2],
+        neurons_count_per_layer=neurons_count_per_layer,
         activation_function=IdentityActivationFunction(),
         cost_function=MSECostFunction())
 
-    nn.weights = [
-        np.array([[0, 1, 1], [1, 2, 2]]),
-        np.array([[1, 2, 2], [0, 1, 1]])
-    ]
-
-    X = np.array([2, 3])
-    y = np.array([0, 1])
+    nn.weights = weights
 
     gradient = nn._backpropagation(X, y)
-    assert_array_equal(
-        gradient,
-        np.array([[[81, 162, 162], [81, 243, 243]],
-                  [[33, 165, 75], [15, 363, 165]]]))
+
+    for x, y in zip(gradient, expected):
+        assert_array_equal(x, y)
 
 
-def test_neural_network_gradient_descent():
+gradient_descent_layers = [[2, 2, 2], [2, 3, 1]]
+
+gradient_descent_weights = [[
+    np.array([[0, 1, 1], [1, 2, 2]]),
+    np.array([[1, 2, 2], [0, 1, 1]])
+], [np.array([[1, 1, 1], [0, 0, 1], [1, 1, 0]]),
+    np.array([[1, 0, 0, 1]])]]
+
+gradient_descent_X = [[np.array([2, 3])], [np.array([1, 1])]]
+
+gradient_descent_y = [[np.array([0, 1])], [np.array([2])]]
+
+gradient_descent_expected = [[
+    np.array([[-81, -161, -242], [-80, -160, -241]]),
+    np.array([[-32, -163, -361], [-15, -74, -164]])
+], [np.array([[1, 1, 1], [0, 0, 1], [0, 0, -1]]),
+    np.array([[0, -3, -1, -1]])]]
+
+gradient_descent_test_cases = list(
+    zip(gradient_descent_layers, gradient_descent_weights, gradient_descent_X,
+        gradient_descent_y, gradient_descent_expected))
+
+
+@pytest.mark.parametrize("neurons_count_per_layer, weights, X, y, expected",
+                         gradient_descent_test_cases)
+def test_neural_network_gradient_descent(neurons_count_per_layer, weights, X,
+                                         y, expected):
     nn = NeuralNetwork(
-        neurons_count_per_layer=[2, 2, 2],
+        neurons_count_per_layer=neurons_count_per_layer,
         activation_function=IdentityActivationFunction(),
         cost_function=SECostFunction())
 
-    nn.weights = [
-        np.array([[0, 1, 1], [1, 2, 2]]),
-        np.array([[1, 2, 2], [0, 1, 1]])
-    ]
-
-    X = [np.array([2, 3])]
-    y = [np.array([0, 1])]
-
-    nn._gradient_descent(X, y, 0.5)
-    assert_allclose(
-        nn.weights,
-        np.array([[[-40.5, -80, -80], [-39.5, -119.5, -119.5]],
-                  [[-15.5, -80.5, -35.5], [-7.5, -180.5, -81.5]]]))
-
-
-def test_neural_network_stochastic_gradient_descent():
-    nn = NeuralNetwork(
-        neurons_count_per_layer=[2, 5, 5, 4, 4, 1],
-        activation_function=SigmoidActivationFunction(),
-        cost_function=MSECostFunction())
-
-    X = list(map(np.array, [[1, 0], [1, 1], [0, 1], [0, 0]]))
-    y = list(map(np.array, [[0], [1], [0], [1]]))
-    cost = nn._stochastic_gradient_descent(X, y, epocs_count=1000, learning_rate=0.1)
-
-    X = [[0.1, 0], [0.2, 0.1], [0.3, 0], [0.11, 0.14], [0.21, 0.20],
-         [0.31, 0.50], [0.30, 0.30], [0.51, 0.51], [0.18, 0.22], [0.1, 0],
-         [0.123, 0.2131231], [0, 0.1], [0, 0.2], [0.123, 0.16],
-         [0.12312, 0.1231231], [0.1249124, 0.123912931]]
-
-    y = [[0.1, 0], [0.2, 0.1], [0.3, 0], [0.11, 0.14], [0.21, 0.20],
-         [0.31, 0.50], [0.30, 0.30], [0.51, 0.51], [0.18, 0.22], [0.1, 0],
-         [0.123, 0.2131231], [0, 0.1], [0, 0.2], [0.123, 0.16],
-         [0.12312, 0.1231231], [0.1249124, 0.123912931]]
-
-    cost = nn._stochastic_gradient_descent(
-        X, y, epocs_count=200, mini_batch_size=16)
+    nn.weights = weights
+    nn._gradient_descent(X, y, 1)
+    for x, y in zip(nn.weights, expected):
+        assert_allclose(x, y)
