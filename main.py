@@ -3,7 +3,7 @@ import backpropagation.network
 import backpropagation.network.neural_network
 import backpropagation.data
 import backpropagation.data.utils
-
+from backpropagation.network.test_neural_network import test_multiple_with_visualization
 import click
 import pickle
 
@@ -78,6 +78,18 @@ def test(
     """
     with open(model_path, 'rb') as f:
         obj = pickle.load(f)
+
+    images = backpropagation.data.utils.read_idx(
+        "data/raw/t10k-images-idx3-ubyte.gz")
+    labels = backpropagation.data.utils.read_idx(
+        "data/raw/t10k-labels-idx1-ubyte.gz"
+    )
+
+    X_test = backpropagation.data.utils.convert_images_to_training_samples(
+        images
+    )
+
+    test_multiple_with_visualization(obj, X_test, labels)
 
 
 if __name__ == '__main__':

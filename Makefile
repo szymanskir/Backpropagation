@@ -43,7 +43,9 @@ tests:
 # PROJECT RULES                                                                 #
 #################################################################################
 
-
+standard_nn: 
+	$(PYTHON_INTERPRETER) main.py train standard_nn_spec.in --epochs 1 --output models/standard_nn.pkl
+	$(PYTHON_INTERPRETER) main.py test models/standard_nn.pkl
 
 #################################################################################
 # Self Documenting Commands                                                     #

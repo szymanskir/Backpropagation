@@ -3,10 +3,11 @@ astroid==2.2.2
 atomicwrites==1.3.0
 attrs==19.1.0
 Babel==2.6.0
--e git+https://github.com/szymanskir/Backpropagation@e14ac52d3c7c8b31190ee87ec02d4b6a65596521#egg=backpropagation
+-e git+https://github.com/szymanskir/Backpropagation.git@4007e9743707c8b8e4251ae2186370305b810f08#egg=backpropagation
 certifi==2018.11.29
 chardet==3.0.4
 Click==7.0
+cycler==0.10.0
 docutils==0.14
 entrypoints==0.3
 flake8==3.7.7
@@ -14,8 +15,10 @@ idna==2.8
 imagesize==1.1.0
 isort==4.3.10
 Jinja2==2.10
+kiwisolver==1.0.1
 lazy-object-proxy==1.3.1
 MarkupSafe==1.1.1
+matplotlib==3.0.3
 mccabe==0.6.1
 more-itertools==6.0.0
 mypy==0.670
@@ -30,6 +33,7 @@ Pygments==2.3.1
 pylint==2.3.1
 pyparsing==2.3.1
 pytest==4.3.0
+python-dateutil==2.8.0
 pytz==2018.9
 requests==2.21.0
 six==1.12.0
