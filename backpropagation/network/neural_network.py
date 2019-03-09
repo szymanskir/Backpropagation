@@ -1,4 +1,5 @@
 import random
+import logging
 import numpy as np
 
 from typing import List, Tuple
@@ -136,7 +137,7 @@ class NeuralNetwork():
             np.atleast_2d(error)
         )
 
-        gradient.append(np.insert(weight_gradient, 0, error, axis=1))
+        gradient.append(np.insert(weight_gradient.transpose(), 0, error, axis=1))
         for layer in range(2, self.layers_count):
             activation_derivative = self.activation_function.calculate_derivative_value(
                 activation_function_arguments[-layer]
@@ -149,7 +150,7 @@ class NeuralNetwork():
                 np.atleast_2d(activation_function_values[-layer - 1]).transpose(),
                 np.atleast_2d(error)
             )
-            gradient.insert(0, np.insert(weight_gradient, 0, error, axis=1))
+            gradient.insert(0, np.insert(weight_gradient.transpose(), 0, error, axis=1))
 
         return gradient
 
@@ -208,8 +209,9 @@ class NeuralNetwork():
         mini_batch_count = len(training_data)//mini_batch_size
         cost = list()
         for epoc in range(epocs_count):
-            cost.append(self.get_cost_function_value(samples, labels))
+#            cost.append(self.get_cost_function_value(samples, labels))
             np.random.shuffle(training_data)
+            print(f'{epoc} epoc...')
             for mini_batch in range(mini_batch_count):
                 start_index = mini_batch*mini_batch_size
                 training_batch = training_data[
