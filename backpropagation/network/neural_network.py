@@ -186,7 +186,7 @@ class NeuralNetwork():
             self,
             samples: np.array,
             labels: np.array,
-            learning_rate: float = 3.0,
+            learning_rate: float = 0.03,
             mini_batch_size: int = 10,
             epochs_count: int = 10,
             test_samples: np.array = None,
