@@ -75,9 +75,9 @@ backpropagation_weights = [[
 ], [np.array([[1, 1, 1], [0, 0, 1], [1, 1, 0]]),
     np.array([[1, 0, 0, 1]])]]
 
-backpropagation_X = [np.array([2, 3]), np.array([1, 1])]
+backpropagation_X = [np.array([[2, 3]]), np.array([[1, 1]])]
 
-backpropagation_y = [np.array([0, 1]), np.array([2])]
+backpropagation_y = [np.array([[0, 1]]), np.array([[2]])]
 
 backpropagation_expected = [[
     np.array([[81, 162, 243], [81, 162, 243]]),
@@ -101,29 +101,38 @@ def test_neural_network_backpropagation(neurons_count_per_layer, weights, X, y,
 
     nn.weights = weights
 
-    gradient = nn._backpropagation(X, y)
+    gradient = nn._backpropagation(X.T, y.T)
 
     for x, y in zip(gradient, expected):
         assert_array_equal(x, y)
 
 
-gradient_descent_layers = [[2, 2, 2], [2, 3, 1]]
+gradient_descent_layers = [[2, 2, 2], [2, 3, 1], [2, 3, 1]]
 
-gradient_descent_weights = [[
-    np.array([[0, 1, 1], [1, 2, 2]]),
-    np.array([[1, 2, 2], [0, 1, 1]])
-], [np.array([[1, 1, 1], [0, 0, 1], [1, 1, 0]]),
-    np.array([[1, 0, 0, 1]])]]
+gradient_descent_weights = [
+    [np.array([[0, 1, 1], [1, 2, 2]]),
+     np.array([[1, 2, 2], [0, 1, 1]])],
+    [np.array([[1, 1, 1], [0, 0, 1], [1, 1, 0]]),
+     np.array([[1, 0, 0, 1]])],
+    [np.array([[1, 1, 1], [0, 0, 1], [1, 1, 0]]),
+     np.array([[1, 0, 0, 1]])]
+]
 
-gradient_descent_X = [[np.array([2, 3])], [np.array([1, 1])]]
+gradient_descent_X = [np.array([[2, 3]]), np.array([[1, 1]]),
+                      np.array([[1, 1], [1, 1]])]
 
-gradient_descent_y = [[np.array([0, 1])], [np.array([2])]]
+gradient_descent_y = [np.array([[0, 1]]), np.array([[2]]),
+                      np.array([[2], [2]])]
 
 gradient_descent_expected = [[
     np.array([[-81, -161, -242], [-80, -160, -241]]),
     np.array([[-32, -163, -361], [-15, -74, -164]])
 ], [np.array([[1, 1, 1], [0, 0, 1], [0, 0, -1]]),
-    np.array([[0, -3, -1, -1]])]]
+    np.array([[0, -3, -1, -1]])],
+                             [
+                                 np.array([[1, 1, 1], [0, 0, 1], [0, 0, -1]]),
+                                 np.array([[0, -3, -1, -1]])
+                             ]]
 
 gradient_descent_test_cases = list(
     zip(gradient_descent_layers, gradient_descent_weights, gradient_descent_X,
