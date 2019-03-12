@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 
 from itertools import accumulate
@@ -5,6 +6,8 @@ from functools import reduce
 from typing import List, Tuple
 from .activation_function import IActivationFunction
 from .cost_function import ICostFunction
+
+logger = logging.getLogger(__name__)
 
 
 class NeuralNetwork():
@@ -128,7 +131,10 @@ class NeuralNetwork():
         activation_function_arguments, activation_function_values = (
             self._collect_activation_function_arguments_and_values(x))
 
-        def propagate_backwards(errors, layer):
+        def propagate_backwards(
+                errors: Tuple[np.array, np.array],
+                layer: int
+        ) -> Tuple[np.array, np.array]:
             error, _ = errors
             activation_derivative = self.activation_function.calculate_derivative_value(
                 activation_function_arguments[-layer])
@@ -195,11 +201,11 @@ class NeuralNetwork():
         """Optimizes the neural network weights and biases using SGD.
 
             Args:
-                samples (List[np.array]):
-                    List of inputs used for neural network training.
+                samples (np.array):
+                    Inputs used for neural network training.
 
-                labels (List[np.array]):
-                    List of expected outputs used for neural network training.
+                labels (np.array):
+                    Expected outputs used for neural network training.
 
                 learning_rate (float):
                     Learning rate coefficient.
@@ -210,26 +216,32 @@ class NeuralNetwork():
                 epochs_count (int):
                     Number of epochs used during training.
 
-                test_samples (List[np.array]):
-                    List of inputs used for neural network testing.
+                test_samples ([np.array]):
+                    Inputs used for neural network testing.
 
-                test_labels (List[np.array]):
-                    List of expected outputs used for neural network testing.       
+                test_labels ([np.array]):
+                    Expected outputs used for neural network testing.
         """
-        training_data = list(zip(samples, labels))
-        mini_batch_count = len(training_data)//mini_batch_size
+        mini_batch_count = len(samples)//mini_batch_size
         train_cost = list()
         test_cost = list()
         for epoch in range(epochs_count):
             train_cost.append(self.get_cost_function_value(samples, labels))
-            np.random.shuffle(training_data)
-            print(f'{epoch} epoch...')
-            for mini_batch in range(mini_batch_count):
+
+            index_permutation = np.random.permutation(len(samples))
+            samples = samples[index_permutation]
+            labels = labels[index_permutation]
+
+            logger.info(f'Calculating {epoch} epoch...')
+            for mini_batch in range(mini_batch_count + 1):
                 start_index = mini_batch * mini_batch_size
-                training_batch = training_data[
-                    start_index:start_index + mini_batch_size]
-                samples, labels = map(list, zip(*training_batch))
-                self._gradient_descent(samples, labels, learning_rate)
+                batch_indexes = range(start_index,
+                                      start_index + mini_batch_size)
+                self._gradient_descent(
+                    samples[batch_indexes],
+                    labels[batch_indexes],
+                    learning_rate
+                )
 
             if test_samples and test_labels:
                 test_cost.append(self.get_cost_function_value(

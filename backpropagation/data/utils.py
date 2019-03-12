@@ -2,8 +2,6 @@ import struct
 import gzip
 import numpy as np
 
-from typing import List
-
 
 def read_idx(filename: str):
     """Reads idx file.
@@ -20,11 +18,11 @@ def image2vector(image: np.array) -> np.array:
     return image.flatten()
 
 
-def convert_images_to_training_samples(images: np.array) -> List[np.array]:
-    return [
+def convert_images_to_training_samples(images: np.array) -> np.array:
+    return np.array([
         image2vector(images[image, :, :]) / 255
         for image in range(images.shape[0])
-    ]
+    ])
 
 
 def label2vector(label: int):
@@ -34,5 +32,5 @@ def label2vector(label: int):
 
 
 def convert_image_labels_to_training_labels(
-        labels: np.array) -> List[np.array]:
-    return [label2vector(label) for label in labels]
+        labels: np.array) -> np.array:
+    return np.array([label2vector(label) for label in labels])
