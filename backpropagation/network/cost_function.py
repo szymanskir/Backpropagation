@@ -12,12 +12,10 @@ class ICostFunction(metaclass=ABCMeta):
 
 
 class MSECostFunction(ICostFunction):
-    def calculate_value(self, y: List[np.array], a: List[np.array]) -> float:
-        n = len(y)
+    def calculate_value(self, y: np.array, a: np.array) -> float:
+        n = y.shape[1]
 
-        costs = [np.power(np.linalg.norm(expected - output), 2)
-                 for expected, output in zip(y, a)]
-
+        costs = np.power(np.linalg.norm(y - a, axis=0), 2)
         return sum(costs) / (2 * n)
 
     def calculate_derivative_value(self, y: np.array, a: np.array) -> np.array:
@@ -25,10 +23,17 @@ class MSECostFunction(ICostFunction):
 
 
 class SECostFunction(ICostFunction):
+    def calculate_value(self, y: np.array, a: np.array) -> float:
+        costs = np.power(y - a, 2)
+        return np.sum(costs) / 2
+
+    def calculate_derivative_value(self, y: np.array, a: np.array) -> np.array:
+        return a - y
+
+
+class CrossEntropyCostFunction(ICostFunction):
     def calculate_value(self, y: List[np.array], a: List[np.array]) -> float:
-        cost = [np.power(expected - output, 2)
-                for expected, output in zip(y, a)]
-        return sum(cost) / 2
+        return -np.sum(y * np.log(a) + (1 - y) * np.log(1 - a))
 
     def calculate_derivative_value(self, y: np.array, a: np.array) -> np.array:
         return a - y

@@ -53,7 +53,7 @@ def test_neural_network_feedforward(neurons_count_per_layer, weights,
 
 @pytest.mark.parametrize(
     "neurons_count_per_layer, weights, X_input, y_input, expected",
-    [([1, 1], [np.array([[-1, 1]])], [np.array([1])], [np.array([1])], 0.125)])
+    [([1, 1], [np.array([[-1, 1]])], np.array([[1]]), np.array([[1]]), 0.125)])
 def test_neural_network_cost_value(neurons_count_per_layer, weights, X_input,
                                    y_input, expected):
     nn = NeuralNetwork(
