@@ -51,7 +51,7 @@ class NeuralNetwork():
         self.activation_function = activation_function
         self.cost_function = cost_function
 
-    def _feedforward(self, x: np.array) -> np.array:
+    def _feedforward(self, X: np.array) -> np.array:
         """Calculates the output of the Neural network for the given input.
 
             Args:
@@ -63,13 +63,13 @@ class NeuralNetwork():
         """
         calculate_activation = self.activation_function.calculate_value
         x = reduce(
-            lambda z, w: calculate_activation(w @ np.insert(z, 0, 1)),
-            [x] + self.weights
+            lambda z, w: calculate_activation(w @ np.insert(z, 0, 1, axis=0)),
+            [X] + self.weights
         )
 
         return x
 
-    def get_cost_function_value(self, X: List[np.array], y: List[np.array]):
+    def get_cost_function_value(self, x: np.array, y: np.array):
         """Calculates the cost value of the neural network for the given inputs.
 
             Args:
@@ -79,9 +79,7 @@ class NeuralNetwork():
             Returns (int):
                 The cost value of the neural network for the given inputs.
         """
-        activation_values = [
-            self._feedforward(observation) for observation in X
-        ]
+        activation_values = self._feedforward(x)
         return self.cost_function.calculate_value(y, activation_values)
 
     def _collect_activation_function_arguments_and_values(
@@ -226,25 +224,25 @@ class NeuralNetwork():
         train_cost = list()
         test_cost = list()
         for epoch in range(epochs_count):
-            train_cost.append(self.get_cost_function_value(samples, labels))
+            train_cost.append(self.get_cost_function_value(samples.T, labels.T))
+
+            if test_samples.size != 0 and test_labels.size != 0:
+                test_cost.append(self.get_cost_function_value(
+                    test_samples.T, test_labels.T))
 
             index_permutation = np.random.permutation(len(samples))
             samples = samples[index_permutation]
             labels = labels[index_permutation]
 
             logger.info(f'Calculating {epoch} epoch...')
-            for mini_batch in range(mini_batch_count + 1):
-                start_index = mini_batch * mini_batch_size
-                batch_indexes = range(start_index,
-                                      start_index + mini_batch_size)
+            for sample_batch, label_batch in zip(
+                    np.array_split(samples, mini_batch_count),
+                    np.array_split(labels, mini_batch_count),
+            ):
                 self._gradient_descent(
-                    samples[batch_indexes],
-                    labels[batch_indexes],
+                    sample_batch,
+                    label_batch,
                     learning_rate
                 )
-
-            if test_samples and test_labels:
-                test_cost.append(self.get_cost_function_value(
-                    test_samples, test_labels))
 
         return train_cost, test_cost
