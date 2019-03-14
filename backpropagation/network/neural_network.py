@@ -62,12 +62,12 @@ class NeuralNetwork():
 
         """
         calculate_activation = self.activation_function.calculate_value
-        x = reduce(
-            lambda z, w: calculate_activation(w @ np.insert(z, 0, 1, axis=0)),
+        output = reduce(
+            lambda x, w: calculate_activation(w @ np.insert(x, 0, 1, axis=0)),
             [X] + self.weights
         )
 
-        return x
+        return output
 
     def get_cost_function_value(self, x: np.array, y: np.array):
         """Calculates the cost value of the neural network for the given inputs.
@@ -106,8 +106,8 @@ class NeuralNetwork():
             [(None, x)] + self.weights, single_pass)
         )
         activation_arguments, activation_values = zip(*activation_parameters)
-        activation_arguments = [*activation_arguments][1:]
-        activation_values = [*activation_values]
+        activation_arguments = list(activation_arguments)[1:]
+        activation_values = list(activation_values)
 
         return activation_arguments, activation_values
 
@@ -160,8 +160,7 @@ class NeuralNetwork():
             propagate_backwards
         ))
 
-        gradient = [d[1] for d in deltas[1:]]
-        gradient.reverse()
+        gradient = [d[1] for d in reversed(deltas[1:])]
         return gradient
 
     def _gradient_descent(
