@@ -1,20 +1,23 @@
 import backpropagation
 import backpropagation.network
-import backpropagation.network.neural_network
-import backpropagation.data
-from backpropagation.data.utils import (
+from backpropagation.data import (
     read_idx, convert_images_to_training_samples,
     convert_image_labels_to_training_labels)
 from backpropagation.network.test_neural_network import (
     test_multiple)
 import click
+import logging
 import pickle
 import matplotlib.pyplot as plt
 
 
 @click.group()
 def main():
-    pass
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+        datefmt='%m-%d %H:%M'
+    )
 
 
 @main.command()
@@ -52,8 +55,8 @@ def train(
 
     nn = backpropagation.network.neural_network.NeuralNetwork(
         neurons_count_per_layer=neurons_counts,
-        activation_function=backpropagation.network.activation_function.SigmoidActivationFunction(),
-        cost_function=backpropagation.network.cost_function.MSECostFunction()
+        activation_function=backpropagation.network.SigmoidActivationFunction(),
+        cost_function=backpropagation.network.cost_function.CrossEntropyCostFunction()
     )
 
     if visualize_loss:
@@ -73,7 +76,7 @@ def train(
     else:
         nn._stochastic_gradient_descent(
             X_train, y_train, mini_batch_size=mini_batch_size,
-            epochs_count=epochs)
+            epochs_count=epochs, learning_rate=0.01)
 
     if output:
         with open(output, 'wb') as f:
@@ -107,7 +110,7 @@ def test(
         if not results[i]:
             misclassified_samples.append(samples[i])
 
-    print(f"Success rate: {1-len(misclassified_samples)/len(samples):0.4f}")
+    logging.info(f"Success rate: {1-len(misclassified_samples)/len(samples):0.4f}")
 
     if all_errors:
         fig = plt.figure()
