@@ -32,7 +32,7 @@ class SECostFunction(ICostFunction):
 
 
 class CrossEntropyCostFunction(ICostFunction):
-    def calculate_value(self, y: List[np.array], a: List[np.array]) -> float:
+    def calculate_value(self, y: np.array, a: np.array) -> float:
         return -np.sum(y * np.log(a) + (1 - y) * np.log(1 - a))
 
     def calculate_derivative_value(self, y: np.array, a: np.array) -> np.array:
