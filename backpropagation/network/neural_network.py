@@ -41,15 +41,33 @@ class NeuralNetwork():
         self.layers_count = len(neurons_count_per_layer)
 
         self.weights = [
-            np.random.normal(size=(
+            self._create_weight_matrix(size=(
                 neurons_count_per_layer[layer + 1],
-                neurons_count_per_layer[layer] + 1
+                neurons_count_per_layer[layer]
             ))
             for layer in range(self.layers_count - 1)
         ]
-
         self.activation_function = activation_function
         self.cost_function = cost_function
+
+    def _create_weight_matrix(self, size: Tuple[int, int]) -> np.array:
+        """Creates a weight matrix between layers of sizes specified by ``size``.
+
+            It creates the biases weights and stacks it horizontally in front of the
+            weight matrix.
+
+            Args:
+                size (Tuple[int, int]): Size of the layers between which the matrix
+                should be initialized.
+
+            Returns (np.array): Weight matrix used to calculate the activation from one
+                layer to another.
+        """
+        rows, columns = size
+        biases = np.random.normal(size=(rows, 1))
+        weight_matrix = np.random.normal(size=(rows, columns), scale=1/np.sqrt(columns))
+
+        return np.hstack([biases, weight_matrix])
 
     def _feedforward(self, X: np.array) -> np.array:
         """Calculates the output of the Neural network for the given input.
