@@ -3,9 +3,11 @@ import numpy as np
 
 from itertools import accumulate
 from functools import reduce
+from math import ceil
 from typing import List, Tuple
 from .activation_function import IActivationFunction
 from .cost_function import ICostFunction
+from .regularizator import IRegulatizator
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +34,7 @@ class NeuralNetwork():
             neurons_count_per_layer: List[int],
             activation_function: IActivationFunction,
             cost_function: ICostFunction,
+            regularizator: IRegulatizator = None,
             random_seed: int = None
     ):
 
@@ -49,6 +52,7 @@ class NeuralNetwork():
         ]
         self.activation_function = activation_function
         self.cost_function = cost_function
+        self.regularizator = regularizator
 
     def _create_weight_matrix(self, size: Tuple[int, int]) -> np.array:
         """Creates a weight matrix between layers of sizes specified by ``size``.
@@ -181,33 +185,31 @@ class NeuralNetwork():
         gradient = [d[1] for d in reversed(deltas[1:])]
         return gradient
 
-    def _gradient_descent(
+    def _update_weights(
             self,
-            samples: np.array,
-            labels: np.array,
-            learning_rate: float
-    ):
-        """Performs gradient descent and updates network weights and biases.
+            gradient: List[np.array],
+            learning_rate: float,
+            regularization_param: float,
+            samples_count: int):
 
-           The gradient is calculated using the backpropagation method.
-
-        Args:
-            samples (List[np.array]):
-                List of inputs used for minimizing the cost function.
-
-            labels (List[np.array]):
-                List of expected outputs used for minimizing the cost function.
-        """
-
-        gradient = self._backpropagation(samples.T, labels.T)
-        self.weights = [w - learning_rate * g
-                        for w, g in zip(self.weights, gradient)]
+        if self.regularizator is not None:
+            only_weights = [w[:, 1:] for w in self.weights]
+            regularization_terms = self.regularizator.get_derivative_terms(
+                regularization_param, only_weights, samples_count)
+            self.weights = [w - learning_rate * (g + np.insert(r, 0, 0, axis=1))
+                            for w, g, r in zip(self.weights,
+                                               gradient,
+                                               regularization_terms)]
+        else:
+            self.weights = [w - learning_rate * g
+                            for w, g in zip(self.weights, gradient)]
 
     def _stochastic_gradient_descent(
             self,
             samples: np.array,
             labels: np.array,
             learning_rate: float = 0.03,
+            regularization_param: float = 0.05,
             mini_batch_size: int = 10,
             epochs_count: int = 10,
             test_samples: np.array = None,
@@ -225,6 +227,9 @@ class NeuralNetwork():
                 learning_rate (float):
                     Learning rate coefficient.
 
+                regularization_param (float):
+                    Regularization parameter.
+
                 mini_batch_size (int):
                     Size of mini batches used during gradient descent.
 
@@ -237,13 +242,13 @@ class NeuralNetwork():
                 test_labels ([np.array]):
                     Expected outputs used for neural network testing.
         """
-        mini_batch_count = len(samples)//mini_batch_size
+        mini_batch_count = ceil(len(samples)/mini_batch_size)
         train_cost = list()
         test_cost = list()
         for epoch in range(epochs_count):
             train_cost.append(self.get_cost_function_value(samples.T, labels.T))
 
-            if test_samples.size != 0 and test_labels.size != 0:
+            if test_samples is not None and test_labels is not None:
                 test_cost.append(self.get_cost_function_value(
                     test_samples.T, test_labels.T))
 
@@ -256,10 +261,11 @@ class NeuralNetwork():
                     np.array_split(samples, mini_batch_count),
                     np.array_split(labels, mini_batch_count),
             ):
-                self._gradient_descent(
-                    sample_batch,
-                    label_batch,
-                    learning_rate
-                )
+                gradient = self._backpropagation(sample_batch.T,
+                                                 label_batch.T)
+                self._update_weights(gradient,
+                                     learning_rate,
+                                     regularization_param,
+                                     samples.shape[1])
 
         return train_cost, test_cost

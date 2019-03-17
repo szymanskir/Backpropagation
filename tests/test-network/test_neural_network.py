@@ -6,6 +6,7 @@ from backpropagation.network.activation_function import (
     IdentityActivationFunction, SigmoidActivationFunction)
 from backpropagation.network.cost_function import (MSECostFunction,
                                                    SECostFunction)
+from backpropagation.network.regularizator import L1Regularizator
 from numpy.testing import assert_array_equal, assert_allclose
 
 feedforward_layers = [[1, 1], [2, 2, 1], [2, 3, 1]]
@@ -107,7 +108,7 @@ def test_neural_network_backpropagation(neurons_count_per_layer, weights, X, y,
         assert_array_equal(x, y)
 
 
-gradient_descent_layers = [[2, 2, 2], [2, 3, 1], [2, 3, 1]]
+gradient_descent_layers = [[2, 2, 2], [2, 3, 1], [2, 3, 1], [2, 3, 1]]
 
 gradient_descent_weights = [
     [np.array([[0, 1, 1], [1, 2, 2]]),
@@ -115,14 +116,24 @@ gradient_descent_weights = [
     [np.array([[1, 1, 1], [0, 0, 1], [1, 1, 0]]),
      np.array([[1, 0, 0, 1]])],
     [np.array([[1, 1, 1], [0, 0, 1], [1, 1, 0]]),
+     np.array([[1, 0, 0, 1]])],
+    [np.array([[1, 1, 1], [0, 0, 1], [1, 1, 0]]),
      np.array([[1, 0, 0, 1]])]
 ]
 
-gradient_descent_X = [np.array([[2, 3]]), np.array([[1, 1]]),
-                      np.array([[1, 1], [1, 1]])]
+gradient_descent_X = [
+    np.array([[2, 3]]),
+    np.array([[1, 1]]),
+    np.array([[1, 1], [1, 1]]),
+    np.array([[1, 1], [1, 1]])
+]
 
-gradient_descent_y = [np.array([[0, 1]]), np.array([[2]]),
-                      np.array([[2], [2]])]
+gradient_descent_y = [
+    np.array([[0, 1]]),
+    np.array([[2]]),
+    np.array([[2], [2]]),
+    np.array([[2], [2]])
+]
 
 gradient_descent_expected = [[
     np.array([[-81, -161, -242], [-80, -160, -241]]),
@@ -132,23 +143,39 @@ gradient_descent_expected = [[
                              [
                                  np.array([[1, 1, 1], [0, 0, 1], [0, 0, -1]]),
                                  np.array([[0, -3, -1, -1]])
-                             ]]
+                             ],
+[
+                                 np.array([[1, .5, .5], [0, 0, .5], [0, -.5, -1]]),
+                                 np.array([[0, -3, -1, -1.5]])
+                             ]
+]
+
+gradient_descent_regularizator = [
+    None, None, None, L1Regularizator()
+]
 
 gradient_descent_test_cases = list(
     zip(gradient_descent_layers, gradient_descent_weights, gradient_descent_X,
-        gradient_descent_y, gradient_descent_expected))
+        gradient_descent_y, gradient_descent_regularizator, gradient_descent_expected))
 
 
-@pytest.mark.parametrize("neurons_count_per_layer, weights, X, y, expected",
+@pytest.mark.parametrize("neurons_count_per_layer, weights, X, y, regularizator, expected",
                          gradient_descent_test_cases)
 def test_neural_network_gradient_descent(neurons_count_per_layer, weights, X,
-                                         y, expected):
+                                         y, regularizator, expected):
     nn = NeuralNetwork(
         neurons_count_per_layer=neurons_count_per_layer,
         activation_function=IdentityActivationFunction(),
-        cost_function=SECostFunction())
+        cost_function=SECostFunction(),
+        regularizator=regularizator)
 
     nn.weights = weights
-    nn._gradient_descent(X, y, 1)
+    nn._stochastic_gradient_descent(
+        samples=X,
+        labels=y,
+        learning_rate=1,
+        regularization_param=1,
+        mini_batch_size=10,
+        epochs_count=1)
     for x, y in zip(nn.weights, expected):
         assert_allclose(x, y)

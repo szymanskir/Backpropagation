@@ -56,7 +56,7 @@ def train(
     nn = backpropagation.network.neural_network.NeuralNetwork(
         neurons_count_per_layer=neurons_counts,
         activation_function=backpropagation.network.SigmoidActivationFunction(),
-        cost_function=backpropagation.network.cost_function.CrossEntropyCostFunction()
+        cost_function=backpropagation.network.cost_function.CrossEntropyCostFunction(),
     )
 
     if visualize_loss:
@@ -66,8 +66,13 @@ def train(
         y_test = convert_image_labels_to_training_labels(test_labels)
 
         train_cost, test_cost = nn._stochastic_gradient_descent(
-            X_train, y_train, mini_batch_size=mini_batch_size,
-            epochs_count=epochs, test_samples=X_test, test_labels=y_test)
+            X_train,
+            y_train,
+            learning_rate=0.1,
+            regularization_param=5,
+            mini_batch_size=mini_batch_size,
+            epochs_count=epochs,
+            test_samples=X_test, test_labels=y_test)
 
         plt.plot([str(i) for i in range(epochs)], train_cost, marker='o')
         plt.plot([str(i) for i in range(epochs)], test_cost, marker='o')
@@ -76,7 +81,7 @@ def train(
     else:
         nn._stochastic_gradient_descent(
             X_train, y_train, mini_batch_size=mini_batch_size,
-            epochs_count=epochs, learning_rate=0.01)
+            epochs_count=epochs, learning_rate=0.01, regularization_param=5)
 
     if output:
         with open(output, 'wb') as f:
