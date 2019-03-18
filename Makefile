@@ -6,7 +6,7 @@
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = backpropagation
-PYTHON_INTERPRETER = python3.6
+PYTHON_INTERPRETER = python3.7
 VENV_NAME = backpropagation-env
 
 #################################################################################
