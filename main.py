@@ -18,20 +18,18 @@ def main():
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
-        datefmt='%m-%d %H:%M'
+        datefmt='%m-%d %H:%M:%S'
     )
 
 
 @main.command()
 @click.argument('neurons_dist_filepath', type=click.Path(exists=True))
-@click.option('--epochs', default=5)
-@click.option('--mini-batch-size', default=10)
+@click.option('--epochs', default=10)
 @click.option('--output', default=None)
 @click.option('--visualize-loss', is_flag=True)
 def train(
     neurons_dist_filepath: str,
     epochs: int,
-    mini_batch_size: int,
     output: str,
     visualize_loss: bool,
 ):
@@ -58,8 +56,10 @@ def train(
     p.shear(probability=0.25, max_shear_left=10, max_shear_right=10)
     p.random_distortion(probability=0.25, grid_width=3, grid_height=3, magnitude=3)
 
+    samples_count = int(len(train_images)*1.5)
+    logging.info(f"Generating {samples_count} images...")
     g = p.keras_generator_from_array(train_images, Augmentor.Pipeline.categorical_labels(train_labels),
-                                     batch_size=int(len(train_images)*1.5), scaled=False)
+        batch_size=samples_count, scaled=False)
     X_aug, y_aug = next(g)
     X_train = convert_images_to_training_samples(X_aug.reshape(X_aug.shape[0], 28, 28))
     y_train = y_aug/1.0
@@ -68,7 +68,6 @@ def train(
         neurons_count_per_layer=neurons_counts,
         activation_function=backpropagation.network.SigmoidActivationFunction(),
         cost_function=backpropagation.network.cost_function.CrossEntropyCostFunction(),
-        random_seed=44
     )
 
     if visualize_loss:
@@ -80,20 +79,16 @@ def train(
         train_cost, test_cost = nn._stochastic_gradient_descent(
             X_train,
             y_train,
-            learning_rate=0.05,
-            regularization_param=5,
-            mini_batch_size=mini_batch_size,
             epochs_count=epochs,
-            test_samples=X_test, test_labels=y_test)
+            test_samples=X_test, 
+            test_labels=y_test)
 
         plt.plot([str(i) for i in range(epochs)], train_cost, marker='o')
         plt.plot([str(i) for i in range(epochs)], test_cost, marker='o')
         plt.legend(['train_cost', 'test_cost'])
         plt.show()
     else:
-        nn._stochastic_gradient_descent(
-            X_train, y_train, mini_batch_size=mini_batch_size,
-            epochs_count=epochs, learning_rate=0.01, regularization_param=5)
+        nn._stochastic_gradient_descent(X_train, y_train, epochs_count=epochs)
 
     if output:
         with open(output, 'wb') as f:
@@ -129,18 +124,6 @@ def test(
 
     logging.info(f"Success rate: {1-len(misclassified_samples)/len(samples):0.4f}")
 
-    if all_errors:
-        fig = plt.figure()
-        fig.subplots_adjust(hspace=0.1, wspace=0.001)
-        dim = int(len(misclassified_samples) ** 0.5) + 1
-        for i in range(len(misclassified_samples)):
-            ax = fig.add_subplot(dim, dim, i+1)
-            ax.set_axis_off()
-            ax.imshow(misclassified_samples[i].reshape(
-                28, 28)[:, :], cmap='gray')
-
-        plt.show()
-
     if per_class_errors:
         error_percentage = list()
         for label in range(10):
@@ -152,6 +135,18 @@ def test(
                 error_percentage, align='center', alpha=0.5)
         plt.ylabel('Error percentage')
         plt.xlabel('Label')
+
+        plt.show()
+
+    if all_errors:
+        fig = plt.figure()
+        fig.subplots_adjust(hspace=0.1, wspace=0.001)
+        dim = int(len(misclassified_samples) ** 0.5) + 1
+        for i in range(len(misclassified_samples)):
+            ax = fig.add_subplot(dim, dim, i+1)
+            ax.set_axis_off()
+            ax.imshow(misclassified_samples[i].reshape(
+                28, 28)[:, :], cmap='gray')
 
         plt.show()
 
