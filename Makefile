@@ -6,7 +6,7 @@
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_NAME = backpropagation
-PYTHON_INTERPRETER = python3.7
+PYTHON_INTERPRETER = python3.6
 VENV_NAME = backpropagation-env
 
 #################################################################################
@@ -44,7 +44,7 @@ tests:
 #################################################################################
 
 standard_nn: 
-	$(PYTHON_INTERPRETER) main.py train standard_nn_spec.in --epochs 1 --output models/standard_nn.pkl
+	$(PYTHON_INTERPRETER) main.py train models/standard_nn.in --output models/standard_nn.pkl
 	$(PYTHON_INTERPRETER) main.py test models/standard_nn.pkl
 
 #################################################################################
