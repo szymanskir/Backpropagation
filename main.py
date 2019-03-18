@@ -8,6 +8,7 @@ from backpropagation.network.test_neural_network import (
 import click
 import logging
 import pickle
+import random
 import matplotlib.pyplot as plt
 import Augmentor
 
@@ -51,13 +52,14 @@ def train(
     train_images = read_idx("data/raw/train-images-idx3-ubyte.gz")
     train_labels = read_idx("data/raw/train-labels-idx1-ubyte.gz")
 
+    random.seed(44)
     p = Augmentor.Pipeline()
     p.rotate(probability=0.5, max_left_rotation=20, max_right_rotation=20)
     p.shear(probability=0.25, max_shear_left=10, max_shear_right=10)
     p.random_distortion(probability=0.25, grid_width=3, grid_height=3, magnitude=3)
 
-    g = p.keras_generator_from_array(train_images, Augmentor.Pipeline.categorical_labels(train_labels), 
-        batch_size=int(len(train_images)*1.5), scaled=False)
+    g = p.keras_generator_from_array(train_images, Augmentor.Pipeline.categorical_labels(train_labels),
+                                     batch_size=int(len(train_images)*1.5), scaled=False)
     X_aug, y_aug = next(g)
     X_train = convert_images_to_training_samples(X_aug.reshape(X_aug.shape[0], 28, 28))
     y_train = y_aug/1.0
@@ -66,6 +68,7 @@ def train(
         neurons_count_per_layer=neurons_counts,
         activation_function=backpropagation.network.SigmoidActivationFunction(),
         cost_function=backpropagation.network.cost_function.CrossEntropyCostFunction(),
+        random_seed=44
     )
 
     if visualize_loss:
@@ -77,7 +80,7 @@ def train(
         train_cost, test_cost = nn._stochastic_gradient_descent(
             X_train,
             y_train,
-            learning_rate=0.1,
+            learning_rate=0.05,
             regularization_param=5,
             mini_batch_size=mini_batch_size,
             epochs_count=epochs,

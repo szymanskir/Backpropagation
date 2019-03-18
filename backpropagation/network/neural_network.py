@@ -249,8 +249,9 @@ class NeuralNetwork():
             train_cost.append(self.get_cost_function_value(samples.T, labels.T))
 
             if test_samples is not None and test_labels is not None:
-                test_cost.append(self.get_cost_function_value(
-                    test_samples.T, test_labels.T))
+                cost = self.get_cost_function_value(test_samples.T, test_labels.T)
+                logger.info(f'Test cost: {cost}...')
+                test_cost.append(cost)
 
             index_permutation = np.random.permutation(len(samples))
             samples = samples[index_permutation]
