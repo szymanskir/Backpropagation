@@ -68,6 +68,7 @@ def train(
         neurons_count_per_layer=neurons_counts,
         activation_function=backpropagation.network.SigmoidActivationFunction(),
         cost_function=backpropagation.network.cost_function.CrossEntropyCostFunction(),
+        random_seed=44
     )
 
     if visualize_loss:
