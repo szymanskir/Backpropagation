@@ -3,14 +3,14 @@ import backpropagation.network
 from backpropagation.data import (
     read_idx, convert_images_to_training_samples,
     convert_image_labels_to_training_labels)
+from backpropagation.network.test_neural_network import (
+test_multiple)
 import click
 import logging
 import pickle
 import random
 import matplotlib.pyplot as plt
 import Augmentor
-import numpy as np
-from typing import List, Tuple
 from sklearn.metrics import roc_curve, auc
 
 @click.group()
@@ -101,10 +101,12 @@ def train(
 @click.argument('model_path', type=click.Path(exists=True))
 @click.option('--per-class-errors', is_flag=True)
 @click.option('--all-errors', is_flag=True)
+@click.option('--roc-curves', is_flag=True)
 def test(
     model_path: str,
     per_class_errors: bool,
-    all_errors: bool
+    all_errors: bool,
+    roc_curves: bool
 ):
     """Test neural network.
 
@@ -153,7 +155,7 @@ def test(
         plt.show()
 
 
-    if True:
+    if roc_curves or True:
         fig = plt.figure()
         fpr = dict()
         tpr = dict()
@@ -183,21 +185,9 @@ def test(
         plt.ylim([0.0, 1.05])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('Some extension of Receiver operating characteristic to multi-class')
+        plt.title('Receiver operating characteristic curve')
         plt.legend(loc="lower right")
         plt.show()
-
-def test_multiple(
-    nn: backpropagation.network.NeuralNetwork, samples: List[np.array], labels: List[int]
-) -> List[Tuple[int, float, int]]:
-    results = list()
-    for sample, label in zip(samples, labels):
-        output = nn._feedforward(sample)
-        predicted_class = np.argmax(output)
-        confidence = np.max(output)
-        results.append((predicted_class, confidence, label))
-
-    return results
 
 
 if __name__ == '__main__':
