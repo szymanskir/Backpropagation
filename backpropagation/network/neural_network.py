@@ -5,7 +5,10 @@ from itertools import accumulate
 from functools import reduce
 from math import ceil
 from typing import List, Tuple
-from .activation_function import IActivationFunction
+from .activation_function import (
+    IActivationFunction,
+    SoftmaxActivationFunction
+)
 from .cost_function import ICostFunction
 from .regularizator import IRegulatizator
 
@@ -32,7 +35,7 @@ class NeuralNetwork():
     def __init__(
             self,
             neurons_count_per_layer: List[int],
-            activation_function: IActivationFunction,
+            activation_functions: List[IActivationFunction],
             cost_function: ICostFunction,
             regularizator: IRegulatizator = None,
             random_seed: int = None
@@ -50,7 +53,7 @@ class NeuralNetwork():
             ))
             for layer in range(self.layers_count - 1)
         ]
-        self.activation_function = activation_function
+        self.activation_functions = activation_functions
         self.cost_function = cost_function
         self.regularizator = regularizator
 
@@ -83,11 +86,9 @@ class NeuralNetwork():
                 The output values of the neural network for the given input.
 
         """
-        calculate_activation = self.activation_function.calculate_value
-        output = reduce(
-            lambda x, w: calculate_activation(w @ np.insert(x, 0, 1, axis=0)),
-            [X] + self.weights
-        )
+        output = X
+        for w, a in zip(self.weights, self.activation_functions):
+            output = a.calculate_value(w @ np.insert(output, 0, 1, axis=0))
 
         return output
 
@@ -118,18 +119,14 @@ class NeuralNetwork():
                 Activation function arguments and values for the given
                 input for each layer.
         """
-        def single_pass(previous_parameters, weight):
-            _, value = previous_parameters
-            argument = weight @ np.insert(value, 0, 1, axis=0)
-            value = self.activation_function.calculate_value(argument)
-            return argument, value
 
-        activation_parameters = list(accumulate(
-            [(None, x)] + self.weights, single_pass)
-        )
-        activation_arguments, activation_values = zip(*activation_parameters)
-        activation_arguments = list(activation_arguments)[1:]
-        activation_values = list(activation_values)
+        activation_arguments = list()
+        activation_values = [x]
+        for w, a in zip(self.weights, self.activation_functions):
+            argument = w @ np.insert(activation_values[-1], 0, 1, axis=0)
+            value = a.calculate_value(argument)
+            activation_arguments.append(argument)
+            activation_values.append(value)
 
         return activation_arguments, activation_values
 
@@ -156,7 +153,7 @@ class NeuralNetwork():
                 layer: int
         ) -> Tuple[np.array, np.array]:
             error, _ = errors
-            activation_derivative = self.activation_function.calculate_derivative_value(
+            activation_derivative = self.activation_functions[-layer].calculate_derivative_value(
                 activation_function_arguments[-layer])
 
             if layer == 1:

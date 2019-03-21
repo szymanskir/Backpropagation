@@ -64,9 +64,10 @@ def train(
     X_train = convert_images_to_training_samples(X_aug.reshape(X_aug.shape[0], 28, 28))
     y_train = y_aug/1.0
 
+    activation_functions = [backpropagation.network.SigmoidActivationFunction()] * (len(neurons_counts) - 2) + [backpropagation.network.SoftmaxActivationFunction()]
     nn = backpropagation.network.neural_network.NeuralNetwork(
         neurons_count_per_layer=neurons_counts,
-        activation_function=backpropagation.network.SigmoidActivationFunction(),
+        activation_functions=activation_functions,
         cost_function=backpropagation.network.cost_function.CrossEntropyCostFunction(),
         random_seed=44
     )
