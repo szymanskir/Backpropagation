@@ -100,12 +100,12 @@ def train(
 @main.command()
 @click.argument('model_path', type=click.Path(exists=True))
 @click.option('--per-class-errors', is_flag=True)
-@click.option('--all-errors', is_flag=True)
+@click.option('--misclassified', is_flag=True)
 @click.option('--roc-curves', is_flag=True)
 def test(
     model_path: str,
     per_class_errors: bool,
-    all_errors: bool,
+    misclassified: bool,
     roc_curves: bool
 ):
     """Test neural network.
@@ -142,7 +142,7 @@ def test(
 
         plt.show()
 
-    if all_errors:
+    if misclassified:
         fig = plt.figure()
         fig.subplots_adjust(hspace=0.1, wspace=0.001)
         dim = int(len(misclassified_samples) ** 0.5) + 1
@@ -155,7 +155,7 @@ def test(
         plt.show()
 
 
-    if roc_curves or True:
+    if roc_curves:
         fig = plt.figure()
         fpr = dict()
         tpr = dict()
