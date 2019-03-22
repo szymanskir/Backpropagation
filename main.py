@@ -4,14 +4,14 @@ from backpropagation.data import (
     read_idx, convert_images_to_training_samples,
     convert_image_labels_to_training_labels)
 from backpropagation.network.test_neural_network import (
-    test_multiple)
+test_multiple)
 import click
 import logging
 import pickle
 import random
 import matplotlib.pyplot as plt
 import Augmentor
-
+from sklearn.metrics import roc_curve, auc
 
 @click.group()
 def main():
@@ -100,11 +100,13 @@ def train(
 @main.command()
 @click.argument('model_path', type=click.Path(exists=True))
 @click.option('--per-class-errors', is_flag=True)
-@click.option('--all-errors', is_flag=True)
+@click.option('--misclassified', is_flag=True)
+@click.option('--roc-curves', is_flag=True)
 def test(
     model_path: str,
     per_class_errors: bool,
-    all_errors: bool
+    misclassified: bool,
+    roc_curves: bool
 ):
     """Test neural network.
 
@@ -121,7 +123,7 @@ def test(
     results = test_multiple(nn, samples, labels)
     misclassified_samples = list()
     for i in range(len(results)):
-        if not results[i]:
+        if results[i][0] != results[i][2]:
             misclassified_samples.append(samples[i])
 
     logging.info(f"Success rate: {1-len(misclassified_samples)/len(samples):0.4f}")
@@ -129,9 +131,9 @@ def test(
     if per_class_errors:
         error_percentage = list()
         for label in range(10):
-            label_indexes = [i for i, v in enumerate(labels) if v == label]
-            tp = sum(results[i] == True for i in label_indexes)
-            error_percentage.append(1-tp/len(label_indexes))
+            current_results = [r for r in results if r[2] == label]
+            tp = sum(r[0] == r[2] for r in current_results)
+            error_percentage.append(1-tp/len(current_results))
 
         plt.bar([str(i) for i in range(10)],
                 error_percentage, align='center', alpha=0.5)
@@ -140,7 +142,7 @@ def test(
 
         plt.show()
 
-    if all_errors:
+    if misclassified:
         fig = plt.figure()
         fig.subplots_adjust(hspace=0.1, wspace=0.001)
         dim = int(len(misclassified_samples) ** 0.5) + 1
@@ -150,6 +152,41 @@ def test(
             ax.imshow(misclassified_samples[i].reshape(
                 28, 28)[:, :], cmap='gray')
 
+        plt.show()
+
+
+    if roc_curves:
+        fig = plt.figure()
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+        for label in range(10):
+            current_results = [r for r in results if r[2] == label]
+            y_true = list()
+            y_score = list()
+            for r in current_results:
+                if r[0] == r[2]:
+                    y_true.append(1)
+                    y_score.append(r[1])
+                else:
+                    y_true.append(0)
+                    y_score.append(1-r[1])                    
+
+            fpr[label], tpr[label], _ = roc_curve(y_true, y_score)
+            roc_auc[label] = auc(fpr[label], tpr[label])
+            
+        for i in range(10):
+            plt.plot(fpr[i], tpr[i], lw=2,
+                    label='ROC curve of class {0} (area = {1:0.2f})'
+                    ''.format(i, roc_auc[i]))
+
+        plt.plot([0, 1], [0, 1], 'k--', lw=2)
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver operating characteristic curve')
+        plt.legend(loc="lower right")
         plt.show()
 
 

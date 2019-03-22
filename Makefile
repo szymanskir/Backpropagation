@@ -47,6 +47,10 @@ standard_nn:
 	$(PYTHON_INTERPRETER) main.py train models/standard_nn.in --output models/standard_nn.pkl
 	$(PYTHON_INTERPRETER) main.py test models/standard_nn.pkl
 
+final_nn: 
+	$(PYTHON_INTERPRETER) main.py train models/final_nn.in --output models/final_nn.pkl
+	$(PYTHON_INTERPRETER) main.py test models/final_nn.pkl
+
 #################################################################################
 # Self Documenting Commands                                                     #
 #################################################################################
