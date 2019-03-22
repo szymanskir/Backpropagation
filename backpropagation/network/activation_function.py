@@ -47,10 +47,9 @@ class ReLUActivationFunction(IActivationFunction):
 class SoftmaxActivationFunction(IActivationFunction):
 
     def calculate_value(self, x: np.array) -> np.array:
-        exponents = np.exp(x)
-        return exponents / sum(exponents)
+        x_stable = x - np.max(x, axis=0)
+        return np.exp(x_stable) / np.sum(np.exp(x_stable), axis=0, keepdims=True)
 
     def calculate_derivative_value(self, x: np.array) -> np.array:
         values = self.calculate_value(x)
-        values_flat = values.flatten((-1, 1))
-        return np.diagflat(values) - values_flat @ values_flat.T
+        return values * (1 - values)

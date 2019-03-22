@@ -45,7 +45,7 @@ def test_neural_network_feedforward(neurons_count_per_layer, weights,
                                     activation, test_input, expected):
     nn = NeuralNetwork(
         neurons_count_per_layer=neurons_count_per_layer,
-        activation_function=activation,
+        activation_functions=[activation] * len(neurons_count_per_layer),
         cost_function=MSECostFunction())
 
     nn.weights = weights
@@ -59,7 +59,7 @@ def test_neural_network_cost_value(neurons_count_per_layer, weights, X_input,
                                    y_input, expected):
     nn = NeuralNetwork(
         neurons_count_per_layer=neurons_count_per_layer,
-        activation_function=SigmoidActivationFunction(),
+        activation_functions=[SigmoidActivationFunction()] * len(neurons_count_per_layer),
         cost_function=SECostFunction())
 
     nn.weights = weights
@@ -97,10 +97,11 @@ def test_neural_network_backpropagation(neurons_count_per_layer, weights, X, y,
                                         expected):
     nn = NeuralNetwork(
         neurons_count_per_layer=neurons_count_per_layer,
-        activation_function=IdentityActivationFunction(),
+        activation_functions=[IdentityActivationFunction()] * len(neurons_count_per_layer),
         cost_function=MSECostFunction())
 
     nn.weights = weights
+    nn.activation_functions[-1] = IdentityActivationFunction()
 
     gradient = nn._backpropagation(X.T, y.T)
 
@@ -165,7 +166,7 @@ def test_neural_network_gradient_descent(neurons_count_per_layer, weights, X,
                                          y, regularizator, expected):
     nn = NeuralNetwork(
         neurons_count_per_layer=neurons_count_per_layer,
-        activation_function=IdentityActivationFunction(),
+        activation_functions=[IdentityActivationFunction()] * len(neurons_count_per_layer),
         cost_function=SECostFunction(),
         regularizator=regularizator)
 
