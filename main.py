@@ -177,7 +177,7 @@ def test(
             
         for i in range(10):
             plt.plot(fpr[i], tpr[i], lw=2,
-                    label='ROC curve of class {0} (area = {1:0.2f})'
+                    label='ROC curve of class {0} (area = {1:0.4f})'
                     ''.format(i, roc_auc[i]))
 
         plt.plot([0, 1], [0, 1], 'k--', lw=2)
